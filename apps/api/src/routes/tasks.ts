@@ -8,7 +8,8 @@ const createTaskSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1).optional(),
   status: z.enum(["todo", "doing", "done"]).optional(),
-  dueDate: z.coerce.date().optional(),
+  dueDate: null
+  //z.coerce.date().optional()
 });
 
 const updateTaskSchema = z
