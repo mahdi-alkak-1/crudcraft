@@ -59,3 +59,15 @@ tasksRouter.post("/", async (req, res) => {
   const created = await TaskModel.create(parsed.data);
   return res.status(201).json(created);
 });
+
+// GET /api/tasks/:id
+tasksRouter.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid id" });
+  }
+
+  const found = await TaskModel.findById(id);
+  if (!found) return res.status(404).json({ error: "Not found" });
+  return res.json(found);
+});
