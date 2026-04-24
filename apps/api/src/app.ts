@@ -5,6 +5,7 @@ import morgan from "morgan";
 
 import type { Env } from "./env";
 import { healthRouter } from "./routes/health";
+import { tasksRouter } from "./routes/tasks";
 
 export function createApp(env: Env) {
   const app = express();
@@ -20,7 +21,7 @@ export function createApp(env: Env) {
 
   app.get("/", (_req, res) => res.json({ name: "CrudCraft API" }));
   app.use("/api/health", healthRouter);
+  app.use("/api/tasks", tasksRouter);
 
   return app;
 }
-
