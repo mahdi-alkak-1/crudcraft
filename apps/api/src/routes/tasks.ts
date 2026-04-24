@@ -126,3 +126,15 @@ tasksRouter.patch("/:id", async (req, res) => {
   if (!updated) return res.status(404).json({ error: "Not found" });
   return res.json(updated);
 });
+
+// DELETE /api/tasks/:id
+tasksRouter.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid id" });
+  }
+
+  const deleted = await TaskModel.findByIdAndDelete(id);
+  if (!deleted) return res.status(404).json({ error: "Not found" });
+  return res.status(204).send();
+});
