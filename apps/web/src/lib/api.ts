@@ -1,7 +1,13 @@
+/**
+ * Returns the base URL for the backend API.
+ */
 export function apiBaseUrl() {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 }
 
+/**
+ * Fetches a URL and returns JSON (or text) while throwing on non-2xx responses.
+ */
 export async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit) {
   const res = await fetch(input, init);
   if (res.status === 204) return undefined as T;
@@ -21,4 +27,3 @@ export async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit)
 
   return body as T;
 }
-

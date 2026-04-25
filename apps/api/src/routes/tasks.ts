@@ -2,14 +2,18 @@ import { Router } from "express";
 import { z } from "zod";
 import { isValidObjectId } from "mongoose";
 
+import { asyncHandler } from "../lib/asyncHandler";
 import { TaskModel } from "../models/task";
+
+function escapeRegex(input: string) {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 const createTaskSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1).optional(),
   status: z.enum(["todo", "doing", "done"]).optional(),
-  dueDate: null
-  //z.coerce.date().optional()
+  dueDate: z.coerce.date().optional(),
 });
 
 const updateTaskSchema = z
@@ -23,6 +27,9 @@ const updateTaskSchema = z
     message: "At least one field is required",
   });
 
+/**
+ * Tasks CRUD router.
+ */
 export const tasksRouter = Router();
 
 const listTasksQuerySchema = z.object({
@@ -33,7 +40,9 @@ const listTasksQuerySchema = z.object({
 });
 
 // GET /api/tasks
-tasksRouter.get("/", async (req, res) => {
+tasksRouter.get(
+  "/",
+  asyncHandler(async (req, res) => {
   const parsed = listTasksQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     return res
@@ -45,9 +54,10 @@ tasksRouter.get("/", async (req, res) => {
   const filter: Record<string, unknown> = {};
   if (status) filter.status = status;
   if (q) {
+    const safe = escapeRegex(q);
     filter.$or = [
-      { title: { $regex: q, $options: "i" } },
-      { description: { $regex: q, $options: "i" } },
+      { title: { $regex: safe, $options: "i" } },
+      { description: { $regex: safe, $options: "i" } },
     ];
   }
 
@@ -57,10 +67,13 @@ tasksRouter.get("/", async (req, res) => {
   ]);
 
   return res.json({ items, total, limit, offset });
-});
+  }),
+);
 
 // POST /api/tasks
-tasksRouter.post("/", async (req, res) => {
+tasksRouter.post(
+  "/",
+  asyncHandler(async (req, res) => {
   const parsed = createTaskSchema.safeParse(req.body);
   if (!parsed.success) {
     return res
@@ -70,10 +83,13 @@ tasksRouter.post("/", async (req, res) => {
 
   const created = await TaskModel.create(parsed.data);
   return res.status(201).json(created);
-});
+  }),
+);
 
 // GET /api/tasks/:id
-tasksRouter.get("/:id", async (req, res) => {
+tasksRouter.get(
+  "/:id",
+  asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
     return res.status(400).json({ error: "Invalid id" });
@@ -82,10 +98,13 @@ tasksRouter.get("/:id", async (req, res) => {
   const found = await TaskModel.findById(id);
   if (!found) return res.status(404).json({ error: "Not found" });
   return res.json(found);
-});
+  }),
+);
 
 // PATCH /api/tasks/:id
-tasksRouter.patch("/:id", async (req, res) => {
+tasksRouter.patch(
+  "/:id",
+  asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
     return res.status(400).json({ error: "Invalid id" });
@@ -126,10 +145,13 @@ tasksRouter.patch("/:id", async (req, res) => {
 
   if (!updated) return res.status(404).json({ error: "Not found" });
   return res.json(updated);
-});
+  }),
+);
 
 // DELETE /api/tasks/:id
-tasksRouter.delete("/:id", async (req, res) => {
+tasksRouter.delete(
+  "/:id",
+  asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
     return res.status(400).json({ error: "Invalid id" });
@@ -138,4 +160,5 @@ tasksRouter.delete("/:id", async (req, res) => {
   const deleted = await TaskModel.findByIdAndDelete(id);
   if (!deleted) return res.status(404).json({ error: "Not found" });
   return res.status(204).send();
-});
+  }),
+);

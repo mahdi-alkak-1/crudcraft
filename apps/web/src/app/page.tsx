@@ -1,4 +1,9 @@
+import { apiBaseUrl } from "@/lib/api";
+import Link from "next/link";
+
 export default function Home() {
+  const healthUrl = `${apiBaseUrl()}/api/health`;
+
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">CrudCraft</h1>
@@ -7,14 +12,14 @@ export default function Home() {
       </p>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <a
+        <Link
           href="/tasks"
           className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800"
         >
           Open Tasks
-        </a>
+        </Link>
         <a
-          href="http://localhost:4000/api/health"
+          href={healthUrl}
           className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
           target="_blank"
           rel="noreferrer"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 import { apiBaseUrl, fetchJson } from "@/lib/api";
 
@@ -27,7 +28,7 @@ function formatDate(input?: string) {
   if (!input) return "";
   const d = new Date(input);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString();
+  return d.toLocaleDateString(undefined, { timeZone: "UTC" });
 }
 
 export default function TasksPage() {
@@ -35,6 +36,9 @@ export default function TasksPage() {
   const [items, setItems] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -54,6 +58,7 @@ export default function TasksPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -81,7 +86,9 @@ export default function TasksPage() {
   }
 
   async function setStatus(id: string, status: TaskStatus) {
+    if (statusUpdating[id]) return;
     setError(null);
+    setStatusUpdating((prev) => ({ ...prev, [id]: true }));
     setItems((prev) => prev.map((t) => (t._id === id ? { ...t, status } : t)));
     try {
       await fetchJson<Task>(`${baseUrl}/api/tasks/${id}`, {
@@ -92,6 +99,8 @@ export default function TasksPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update task");
       await load();
+    } finally {
+      setStatusUpdating((prev) => ({ ...prev, [id]: false }));
     }
   }
 
@@ -111,12 +120,12 @@ export default function TasksPage() {
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-        <a
+        <Link
           href="/"
           className="text-sm text-zinc-600 underline underline-offset-4 hover:text-zinc-900"
         >
           Home
-        </a>
+        </Link>
       </div>
 
       <p className="mt-2 text-sm text-zinc-600">
@@ -216,7 +225,8 @@ export default function TasksPage() {
                     onChange={(e) =>
                       void setStatus(t._id, e.target.value as TaskStatus)
                     }
-                    className="h-9 rounded-lg border border-zinc-200 bg-white px-2 text-sm outline-none ring-zinc-300 focus:ring-2"
+                    disabled={!!statusUpdating[t._id]}
+                    className="h-9 rounded-lg border border-zinc-200 bg-white px-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:opacity-50"
                   >
                     <option value="todo">Todo</option>
                     <option value="doing">Doing</option>
@@ -238,4 +248,3 @@ export default function TasksPage() {
     </main>
   );
 }
-
