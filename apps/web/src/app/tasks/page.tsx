@@ -116,13 +116,12 @@ export default function TasksPage() {
 
   async function remove(id: string) {
     setError(null);
-    const before = items;
     setItems((prev) => prev.filter((t) => t._id !== id));
     try {
       await fetchJson<void>(`${baseUrl}/api/tasks/${id}`, { method: "DELETE" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to delete task");
-      setItems(before);
+      await load();
     }
   }
 
