@@ -9,12 +9,33 @@ function escapeRegex(input: string) {
   return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const createTaskSchema = z.object({
-  title: z.string().trim().min(1),
-  description: z.string().trim().min(1).optional(),
-  status: z.enum(["todo", "doing", "done"]).optional(),
-  dueDate: z.coerce.date().optional(),
-});
+function utcStartOfToday() {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+}
+
+function isOnOrAfterTodayUtc(date: Date) {
+  return date.getTime() >= utcStartOfToday().getTime();
+}
+
+const createTaskSchema = z
+  .object({
+    title: z.string().trim().min(1),
+    description: z.string().trim().min(1).optional(),
+    status: z.enum(["todo", "doing", "done"]).optional(),
+    dueDate: z.coerce.date().optional(),
+  })
+  .superRefine((obj, ctx) => {
+    if (obj.dueDate && !isOnOrAfterTodayUtc(obj.dueDate)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dueDate"],
+        message: "dueDate must be today or later",
+      });
+    }
+  });
 
 const updateTaskSchema = z
   .object({
@@ -22,6 +43,15 @@ const updateTaskSchema = z
     description: z.string().trim().min(1).nullable().optional(),
     status: z.enum(["todo", "doing", "done"]).optional(),
     dueDate: z.coerce.date().nullable().optional(),
+  })
+  .superRefine((obj, ctx) => {
+    if (obj.dueDate instanceof Date && !isOnOrAfterTodayUtc(obj.dueDate)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dueDate"],
+        message: "dueDate must be today or later",
+      });
+    }
   })
   .refine((obj) => Object.keys(obj).length > 0, {
     message: "At least one field is required",

@@ -24,6 +24,13 @@ type ListResponse = {
   offset: number;
 };
 
+function formatLocalYyyyMmDd(date: Date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function formatDate(input?: string) {
   if (!input) return "";
   const d = new Date(input);
@@ -33,6 +40,7 @@ function formatDate(input?: string) {
 
 export default function TasksPage() {
   const baseUrl = useMemo(() => apiBaseUrl(), []);
+  const minDueDate = useMemo(() => formatLocalYyyyMmDd(new Date()), []);
   const [items, setItems] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +81,9 @@ export default function TasksPage() {
         body: JSON.stringify({
           title,
           description: description.trim() ? description : undefined,
-          dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+          dueDate: dueDate
+            ? new Date(`${dueDate}T00:00:00.000Z`).toISOString()
+            : undefined,
         }),
       });
       setTitle("");
@@ -153,6 +163,7 @@ export default function TasksPage() {
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               type="date"
+              min={minDueDate}
               className="h-10 rounded-lg border border-zinc-200 px-3 outline-none ring-zinc-300 focus:ring-2"
             />
           </label>
