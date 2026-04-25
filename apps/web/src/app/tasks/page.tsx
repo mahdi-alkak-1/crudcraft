@@ -24,10 +24,10 @@ type ListResponse = {
   offset: number;
 };
 
-function formatLocalYyyyMmDd(date: Date) {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
+function formatUtcYyyyMmDd(date: Date) {
+  const yyyy = date.getUTCFullYear();
+  const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(date.getUTCDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
 
@@ -40,7 +40,7 @@ function formatDate(input?: string) {
 
 export default function TasksPage() {
   const baseUrl = useMemo(() => apiBaseUrl(), []);
-  const minDueDate = useMemo(() => formatLocalYyyyMmDd(new Date()), []);
+  const minDueDate = useMemo(() => formatUtcYyyyMmDd(new Date()), []);
   const [items, setItems] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
