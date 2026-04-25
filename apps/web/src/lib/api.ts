@@ -2,7 +2,9 @@
  * Returns the base URL for the backend API.
  */
 export function apiBaseUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  const raw = (process.env.NEXT_PUBLIC_API_URL ?? "").trim();
+  const base = raw || "http://localhost:4000";
+  return base.replace(/\/+$/, "");
 }
 
 /**
